@@ -143,26 +143,24 @@ def setup_wifi(info):
             # Rebooting only if board is Portenta H7 because the Wi-Fi works one time out of 2
             machine.reset()
 
-def download_files_from_github(repo, file_list):
+def download_files_from_github(repo, file_list, directory):
     import urequests
-    """Downloads specified files from a GitHub repository."""
+    """Downloads specified files from a GitHub repository to a specific directory."""
     base_url = f"https://raw.githubusercontent.com/{repo}/master/Src/"
+
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
     for file in file_list:
         url = f"{base_url}{file}"
         try:
             response = urequests.get(url)
             if response.status_code == 200:
-                file_path = f"{MainDir}/{file}"
-                directories = file_path.split('/')[:-1]
-                current_path = ''
-                for directory in directories:
-                    current_path = f"{current_path}/{directory}"
-                    if not current_path.strip('/'):
-                        continue
-                    if current_path.strip('/') not in os.listdir('/'.join(current_path.split('/')[:-1])):
-                        os.mkdir(current_path.strip('/'))
-                
+                file_path = os.path.join(directory, file)
+                directories = os.path.dirname(file_path)
+                if not os.path.exists(directories):
+                    os.makedirs(directories)
+
                 with open(file_path, "wb") as f:
                     f.write(response.content)
                 print(f"{color_green}Downloaded: {file}{color_reset}")
@@ -189,7 +187,8 @@ def main():
             # Example usage for downloading files from GitHub
             repo = "Andre-cmd-rgb/Star-Os-Micropython"
             file_list = ["Star-Os.py"]
-            download_files_from_github(repo, file_list)
+            download_files_from_github(repo, file_list, MainDir)
+            download_files_from_github("miguelgrinberg/microdot", ["microdot/microdot.py", "microdot/__init__.py"], "lib/microdot")
         else:
             print(f"{color_red}Wi-Fi not supported on this board, skipping installation!{color_reset}")
 
