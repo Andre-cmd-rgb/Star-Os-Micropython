@@ -127,7 +127,7 @@ def setup_wifi():
     wlan.connect(ssid, password)
     
     # Wait until connected
-    max_wait = 4
+    max_wait = 10
     while max_wait > 0:
         if wlan.isconnected():
             break
@@ -171,18 +171,27 @@ def download_files_from_github(repo, file_list):
             response.close()
         except Exception as e:
             print(f"{color_red}Error downloading {file}: {e}{color_reset}")
-# Example usage
-info = detect_board()
-save_setup_info(info)
-print_colored_info()
 
-if info['wifi_support'] == 'yes':
-    setup_wifi()
-    # Example usage for downloading files from GitHub
-    repo = "Andre-cmd-rgb/Star-Os-Micropython"
-    file_list = ["test.txt"]
-    download_files_from_github(repo, file_list)
-else:
-    print(f"{color_red}Wi-Fi not supported on this board, skipping installation!{color_reset}")
+def main():
+    if MainDir in os.listdir() and "Star-Os.py" in os.listdir(MainDir):
+        print(f"{color_yellow}Star-Os.py found. Running the script...{color_reset}")
+        try:
+            exec(open(f"{MainDir}/Star-Os.py").read())
+        except Exception as e:
+            print(f"{color_red}Error running Star-Os.py: {e}{color_reset}")
+    else:
+        info = detect_board()
+        save_setup_info(info)
+        print_colored_info()
 
+        if info['wifi_support'] == 'yes':
+            setup_wifi()
+            # Example usage for downloading files from GitHub
+            repo = "Andre-cmd-rgb/Star-Os-Micropython"
+            file_list = ["Star-Os.py"]
+            download_files_from_github(repo, file_list)
+        else:
+            print(f"{color_red}Wi-Fi not supported on this board, skipping installation!{color_reset}")
 
+if __name__ == "__main__":
+    main()
