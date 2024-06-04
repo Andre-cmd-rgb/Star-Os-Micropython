@@ -59,7 +59,7 @@ def main_operations():
 
     @app.route('/')
     def hello(request):
-        return 'Hello, World!'
+        return 'Hello, World!(running on micropython)'
 
     print(f"{color_green}Starting web server...{color_reset}")
     app.run(host='0.0.0.0', port=80)
