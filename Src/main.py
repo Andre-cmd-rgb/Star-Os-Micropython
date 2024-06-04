@@ -228,6 +228,8 @@ def main():
             file_list = ["Src/Star-Os.py"]
             download_files_from_github(repo, file_list, MainDir)
             download_files_from_github("miguelgrinberg/microdot", ["src/microdot/microdot.py", "src/microdot/__init__.py"], "lib/microdot")
+            print(f"{color_green}Star Os installation completed succesfully!, rebooting...{color_reset}")
+            machine.reset()
         else:
             print(f"{color_red}Wi-Fi not supported on this board, skipping installation!{color_reset}")
 
