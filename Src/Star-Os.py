@@ -46,13 +46,13 @@ def connect_to_wifi(ssid, password):
         print(wlan.ifconfig())
         return True
     else:
-        print(f"{color_red}Failed to connect to Wi-Fi{color_reset}")
+        print(f"{color_red}Failed to connect to Wi-Fi, rebooting...{color_reset}")
         machine.reset()
         return False
 
 def main_operations():
     """Main operations of the Star-OS system."""
-    print(f"{color_yellow}Running main operations of Star-OS...{color_reset}")
+    print(f"{color_blue}Star-OS started succesfully!{color_reset}")
 
     # Initialize the web server
     app = Microdot()
