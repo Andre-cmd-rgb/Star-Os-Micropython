@@ -109,7 +109,7 @@ def print_colored_info():
     except Exception as e:
         print(f"{color_red}Error printing board information: {e}{color_reset}")
 
-def setup_wifi():
+def setup_wifi(info):
     """Sets up the Wi-Fi connection."""
     import network
     ssid, password = load_wifi_credentials()
@@ -185,7 +185,7 @@ def main():
         print_colored_info()
 
         if info['wifi_support'] == 'yes':
-            setup_wifi()
+            setup_wifi(info)
             # Example usage for downloading files from GitHub
             repo = "Andre-cmd-rgb/Star-Os-Micropython"
             file_list = ["Star-Os.py"]
