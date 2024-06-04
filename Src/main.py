@@ -116,6 +116,7 @@ def setup_wifi():
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
     time.sleep(1)
+    wlan.config(pm=wlan.PM_NONE)
     print(f"{color_blue}Connecting to Wi-Fi...{color_reset}")
     wlan.connect(ssid, password)
     
@@ -132,6 +133,9 @@ def setup_wifi():
         print(wlan.ifconfig())
     else:
         print(f"{color_red}Failed to connect to Wi-Fi{color_reset}")
+        if info['board'] == 'Arduino Portenta H7 with STM32H747':
+            # rebooting only if board is Portenta H7 because the wifi works one time out of 2
+            machine.reset()
 
 # Example usage
 info = detect_board()
