@@ -146,22 +146,23 @@ def setup_wifi(info):
 def download_files_from_github(repo, file_list, directory):
     import urequests
     """Downloads specified files from a GitHub repository to a specific directory."""
-    base_url = f"https://raw.githubusercontent.com/{repo}/master/Src/"
+    base_url = f"https://raw.githubusercontent.com/{repo}/master/"
 
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    # Create directory if it doesn't exist
+    if not directory in os.listdir():
+        os.mkdir(directory)
 
     for file in file_list:
         url = f"{base_url}{file}"
         try:
             response = urequests.get(url)
             if response.status_code == 200:
-                file_path = directory + '/' + file  # Concatenate directory and file name
+                file_path = f"{directory}/{file}"  # Construct file path
                 directories = directory.split('/')[:-1]
                 current_path = ''
                 for d in directories:
-                    current_path = current_path + '/' + d
-                    if current_path.strip('/') and current_path.strip('/') not in os.listdir(current_path.strip('/')):
+                    current_path += f"/{d}"
+                    if current_path.strip('/') not in os.listdir():
                         os.mkdir(current_path.strip('/'))
                 
                 with open(file_path, "wb") as f:
@@ -190,9 +191,9 @@ def main():
             setup_wifi(info)
             # Example usage for downloading files from GitHub
             repo = "Andre-cmd-rgb/Star-Os-Micropython"
-            file_list = ["Star-Os.py"]
+            file_list = ["Src/Star-Os.py"]
             download_files_from_github(repo, file_list, MainDir)
-            download_files_from_github("miguelgrinberg/microdot", ["microdot/microdot.py", "microdot/__init__.py"], "lib/microdot")
+            download_files_from_github("miguelgrinberg/microdot", ["src/microdot/microdot.py", "src/microdot/__init__.py"], "lib/microdot")
         else:
             print(f"{color_red}Wi-Fi not supported on this board, skipping installation!{color_reset}")
 
