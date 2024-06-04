@@ -16,6 +16,7 @@ color_cyan = "\033[96m"
 MainDir = "Star-Os"
 
 def detect_board():
+    """Detects and returns information about the board."""
     board_info = {}
 
     try:
@@ -60,6 +61,7 @@ def detect_board():
     return board_info
 
 def save_setup_info(board_info):
+    """Saves the detected board information to a JSON file."""
     try:
         with open("setupinfo.json", "w") as f:
             json.dump(board_info, f)
@@ -67,6 +69,7 @@ def save_setup_info(board_info):
         print(f"{color_red}Error saving setup info: {e}{color_reset}")
 
 def save_wifi_credentials(ssid, password):
+    """Saves Wi-Fi credentials to a JSON file."""
     wifi_credentials = {
         'ssid': ssid,
         'password': password
@@ -81,6 +84,7 @@ def save_wifi_credentials(ssid, password):
         print(f"{color_red}Error saving Wi-Fi credentials: {e}{color_reset}")
 
 def load_wifi_credentials():
+    """Loads Wi-Fi credentials from the saved JSON file."""
     try:
         with open(f"{MainDir}/wifi-credentials.json", "r") as f:
             wifi_credentials = json.load(f)
@@ -88,7 +92,8 @@ def load_wifi_credentials():
     except (OSError, ValueError, KeyError) as e:
         return None, None
 
-def print_colored_info(info):
+def print_colored_info():
+    """Prints the board information in colored text."""
     try:
         with open("setupinfo.json", "r") as f:
             json_data = json.load(f)
@@ -105,6 +110,7 @@ def print_colored_info(info):
         print(f"{color_red}Error printing board information: {e}{color_reset}")
 
 def setup_wifi():
+    """Sets up the Wi-Fi connection."""
     import network
     ssid, password = load_wifi_credentials()
     if ssid is None or password is None:
@@ -121,7 +127,7 @@ def setup_wifi():
     wlan.connect(ssid, password)
     
     # Wait until connected
-    max_wait = 10
+    max_wait = 4
     while max_wait > 0:
         if wlan.isconnected():
             break
@@ -134,15 +140,49 @@ def setup_wifi():
     else:
         print(f"{color_red}Failed to connect to Wi-Fi{color_reset}")
         if info['board'] == 'Arduino Portenta H7 with STM32H747':
-            # rebooting only if board is Portenta H7 because the wifi works one time out of 2
+            # Rebooting only if board is Portenta H7 because the Wi-Fi works one time out of 2
             machine.reset()
 
+def download_files_from_github(repo, file_list):
+    import urequests
+    """Downloads specified files from a GitHub repository."""
+    base_url = f"https://raw.githubusercontent.com/{repo}/master/Src/"
+
+    for file in file_list:
+        url = f"{base_url}{file}"
+        try:
+            response = urequests.get(url)
+            if response.status_code == 200:
+                file_path = f"{MainDir}/{file}"
+                directories = file_path.split('/')[:-1]
+                current_path = ''
+                for directory in directories:
+                    current_path = f"{current_path}/{directory}"
+                    if not current_path.strip('/'):
+                        continue
+                    if current_path.strip('/') not in os.listdir('/'.join(current_path.split('/')[:-1])):
+                        os.mkdir(current_path.strip('/'))
+                
+                with open(file_path, "wb") as f:
+                    f.write(response.content)
+                print(f"{color_green}Downloaded: {file}{color_reset}")
+            else:
+                print(f"{color_red}Failed to download {file}: {response.status_code}{color_reset}")
+            response.close()
+        except Exception as e:
+            print(f"{color_red}Error downloading {file}: {e}{color_reset}")
 # Example usage
 info = detect_board()
 save_setup_info(info)
-print_colored_info(info)
+print_colored_info()
 
 if info['wifi_support'] == 'yes':
     setup_wifi()
+    # Example usage for downloading files from GitHub
+    repo = "Andre-cmd-rgb/Star-Os-Micropython"
+    file_list = ["test.txt"]
+    download_files_from_github(repo, file_list)
 else:
     print(f"{color_red}Wi-Fi not supported on this board, skipping installation!{color_reset}")
+
+
