@@ -156,11 +156,14 @@ def download_files_from_github(repo, file_list, directory):
         try:
             response = urequests.get(url)
             if response.status_code == 200:
-                file_path = os.path.join(directory, file)
-                directories = os.path.dirname(file_path)
-                if not os.path.exists(directories):
-                    os.makedirs(directories)
-
+                file_path = directory + '/' + file  # Concatenate directory and file name
+                directories = directory.split('/')[:-1]
+                current_path = ''
+                for d in directories:
+                    current_path = current_path + '/' + d
+                    if current_path.strip('/') and current_path.strip('/') not in os.listdir(current_path.strip('/')):
+                        os.mkdir(current_path.strip('/'))
+                
                 with open(file_path, "wb") as f:
                     f.write(response.content)
                 print(f"{color_green}Downloaded: {file}{color_reset}")
@@ -169,6 +172,7 @@ def download_files_from_github(repo, file_list, directory):
             response.close()
         except Exception as e:
             print(f"{color_red}Error downloading {file}: {e}{color_reset}")
+
 
 def main():
     if MainDir in os.listdir() and "Star-Os.py" in os.listdir(MainDir):
