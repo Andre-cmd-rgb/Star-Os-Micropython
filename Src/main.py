@@ -221,11 +221,13 @@ def main():
 
         if info['wifi_support'] == 'yes':
             setup_wifi(info)
+            import mip
+            mip.install("urequests")
             # Example usage for downloading files from GitHub
             repo = "Andre-cmd-rgb/Star-Os-Micropython"
             file_list = ["Src/Star-Os.py"]
             download_files_from_github(repo, file_list, MainDir)
-            download_files_from_github("miguelgrinberg/microdot", ["src/microdot/microdot.py", "src/microdot/__init__.py"], "/flash/lib/microdot")
+            download_files_from_github("miguelgrinberg/microdot", ["src/microdot/microdot.py", "src/microdot/__init__.py"], "lib/microdot")
         else:
             print(f"{color_red}Wi-Fi not supported on this board, skipping installation!{color_reset}")
 
