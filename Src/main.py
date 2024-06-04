@@ -143,38 +143,70 @@ def setup_wifi(info):
             # Rebooting only if board is Portenta H7 because the Wi-Fi works one time out of 2
             machine.reset()
 
-def download_files_from_github(repo, file_list, directory):
+def ensure_directories_exist(filepath):
+    """Ensure all directories in the given file path exist."""
+    directories = filepath.split('/')[:-1]
+    current_path = ''
+    for directory in directories:
+        current_path = f"{current_path}/{directory}".strip('/')
+        if current_path not in os.listdir():
+            os.mkdir(current_path)
+
+def ensure_directory_exists(directory):
+    """Ensures that the directory exists."""
+    try:
+        os.listdir(directory)
+    except OSError:
+        try:
+            os.mkdir(directory)
+        except OSError as e:
+            print(f"Error creating directory {directory}: {e}")
+            raise
+
+def download_files_from_github(repo, file_list, dest_dir):
     import urequests
-    """Downloads specified files from a GitHub repository to a specific directory."""
+    """Downloads specified files from a GitHub repository and saves them directly to dest_dir."""
     base_url = f"https://raw.githubusercontent.com/{repo}/master/"
 
-    # Create directory if it doesn't exist
-    if not directory in os.listdir():
-        os.mkdir(directory)
+
+
+    # Ensure dest_dir exists
+    try:
+        ensure_directory_exists(dest_dir)
+    except OSError:
+        return
 
     for file in file_list:
         url = f"{base_url}{file}"
-        try:
-            response = urequests.get(url)
-            if response.status_code == 200:
-                file_path = f"{directory}/{file}"  # Construct file path
-                directories = directory.split('/')[:-1]
-                current_path = ''
-                for d in directories:
-                    current_path += f"/{d}"
-                    if current_path.strip('/') not in os.listdir():
-                        os.mkdir(current_path.strip('/'))
-                
-                with open(file_path, "wb") as f:
-                    f.write(response.content)
-                print(f"{color_green}Downloaded: {file}{color_reset}")
-            else:
-                print(f"{color_red}Failed to download {file}: {response.status_code}{color_reset}")
-            response.close()
-        except Exception as e:
-            print(f"{color_red}Error downloading {file}: {e}{color_reset}")
+        filename = file.split('/')[-1]
+        file_path = f"{dest_dir}/{filename}"
 
+        # Check if file already exists
+        if filename in os.listdir(dest_dir):
+            print(f"{color_red}File {filename} already exists in {dest_dir}. Skipping.{color_reset}")
+            continue
 
+        retries = 3
+        while retries > 0:
+            try:
+                response = urequests.get(url)
+                if response.status_code == 200:
+                    with open(file_path, "wb") as f:
+                        f.write(response.content)
+                    print(f"{color_green}Downloaded: {filename}{color_reset}")
+                    break
+                else:
+                    print(f"{color_red}Failed to download {filename}: {response.status_code}{color_reset}")
+                    retries -= 1
+            except OSError as e:
+                print(f"{color_red}Error downloading {filename}: {e}{color_reset}")
+                retries -= 1
+            finally:
+                if 'response' in locals():
+                    response.close()
+        
+        if retries == 0:
+            print(f"{color_red}Max retries exceeded for {filename}. Skipping.{color_reset}")
 def main():
     if MainDir in os.listdir() and "Star-Os.py" in os.listdir(MainDir):
         print(f"{color_yellow}Star-Os.py found. Running the script...{color_reset}")
@@ -193,7 +225,7 @@ def main():
             repo = "Andre-cmd-rgb/Star-Os-Micropython"
             file_list = ["Src/Star-Os.py"]
             download_files_from_github(repo, file_list, MainDir)
-            download_files_from_github("miguelgrinberg/microdot", ["src/microdot/microdot.py", "src/microdot/__init__.py"], "lib/microdot")
+            download_files_from_github("miguelgrinberg/microdot", ["src/microdot/microdot.py", "src/microdot/__init__.py"], "/flash/lib/microdot")
         else:
             print(f"{color_red}Wi-Fi not supported on this board, skipping installation!{color_reset}")
 
