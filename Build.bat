@@ -1,0 +1,1 @@
+xcopy "%CD%/Src/*" "D:/" /e /r
