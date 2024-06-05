@@ -1,9 +1,8 @@
 import json
-import os
+import gc
 import time
 import machine
 import network
-from microdot import Microdot
 
 # ANSI escape codes for colors
 color_reset = "\033[0m"
@@ -13,6 +12,8 @@ color_blue = "\033[94m"
 color_yellow = "\033[93m"
 
 MainDir = "Star-Os"
+
+gc.enable()
 
 def load_wifi_credentials():
     """Loads Wi-Fi credentials from the saved JSON file."""
@@ -52,6 +53,7 @@ def connect_to_wifi(ssid, password):
 
 def main_operations():
     """Main operations of the Star-OS system."""
+    from microdot import Microdot
     print(f"{color_blue}Star-OS started succesfully!{color_reset}")
 
     # Initialize the web server

@@ -15,6 +15,8 @@ color_cyan = "\033[96m"
 # Main directory for storing Wi-Fi credentials
 MainDir = "Star-Os"
 
+gc.enable()
+
 def detect_board():
     """Detects and returns information about the board."""
     board_info = {}
