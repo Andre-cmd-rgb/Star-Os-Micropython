@@ -149,10 +149,10 @@ def ensure_directory_exists(directory):
             print(f"{COLOR_RED}Error creating directory {directory}: {e}{COLOR_RESET}")
             raise
 
-def download_files_from_github(repo, file_list, dest_dir):
+def download_files_from_github(repo, file_list, dest_dir, branch="master"):
     """Downloads specified files from a GitHub repository and saves them directly to dest_dir."""
     import urequests
-    base_url = f"https://raw.githubusercontent.com/{repo}/master/"
+    base_url = f"https://raw.githubusercontent.com/{repo}/{branch}/"
 
     try:
         ensure_directory_exists(dest_dir)
