@@ -207,7 +207,7 @@ def main():
             import mip
             mip.install("urequests")
             repo = "Andre-cmd-rgb/Star-Os-Micropython"
-            file_list = ["Src/Star-Os.py"]
+            file_list = ["Src/Star-Os.py", "Src/index.html"]
             download_files_from_github(repo, file_list, MAIN_DIR)
             download_files_from_github("miguelgrinberg/microdot", ["src/microdot.py", "src/microdot_asyncio.py"], "lib", "v1")
             print(f"{COLOR_GREEN}Star Os installation completed successfully, rebooting...{COLOR_RESET}")
