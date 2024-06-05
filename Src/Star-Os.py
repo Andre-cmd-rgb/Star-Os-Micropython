@@ -63,7 +63,7 @@ def main_operations():
     async def hello(request):
         return 'Hello, World! (running on micropython)'
     @app.get('/shutdown')
-    async def shutdown(request):
+    def shutdown(request):
         request.app.shutdown()
         return 'The server is shutting down...'
     print(f"{COLOR_GREEN}Starting web server...{COLOR_RESET}")
