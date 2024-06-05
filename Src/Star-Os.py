@@ -54,20 +54,71 @@ def connect_to_wifi(ssid, password):
 def main_operations():
     """Main operations of the Star-OS system."""
     from microdot_asyncio import Microdot, send_file
+    import ujson
+
     print(f"{COLOR_BLUE}Star-OS started successfully!{COLOR_RESET}")
 
     # Initialize the web server
     app = Microdot()
 
+    dynamic_apps = {}
+
     @app.route('/')
-    async def hello(request):
-        return 'Hello, World! (running on micropython)'
+    async def index(request):
+        return '''
+            <html>
+                <body>
+                    <h1>Create New API</h1>
+                    <form action="/create-api" method="post">
+                        <label for="port">Port:</label>
+                        <input type="number" id="port" name="port"><br>
+                        <label for="path">Path:</label>
+                        <input type="text" id="path" name="path"><br>
+                        <label for="response">Response:</label>
+                        <textarea id="response" name="response"></textarea><br>
+                        <input type="submit" value="Create API">
+                    </form>
+                </body>
+            </html>
+        '''
+
+    @app.post('/create-api')
+    async def create_api(request):
+        data = await request.form()
+        port = int(data['port'])
+        path = data['path']
+        response = data['response']
+
+        if port not in dynamic_apps:
+            dynamic_app = Microdot()
+            dynamic_apps[port] = dynamic_app
+
+            @dynamic_app.route('/<path:path>', methods=['GET', 'POST'])
+            async def dynamic_route(request, path):
+                if request.method == 'POST':
+                    return ujson.loads(response)
+                return response
+
+            dynamic_app.run(host='0.0.0.0', port=port, debug=True)
+        else:
+            dynamic_app = dynamic_apps[port]
+
+            @dynamic_app.route(path, methods=['GET', 'POST'])
+            async def new_route(request):
+                if request.method == 'POST':
+                    return ujson.loads(response)
+                return response
+
+        return f'API created at port {port} with path {path}'
+
     @app.get('/shutdown')
     async def shutdown(request):
         request.app.shutdown()
         return 'The server is shutting down...'
-    print(f"{COLOR_GREEN}Starting web server...{COLOR_RESET}")
+
+    print(f"{COLOR_GREEN}Web Server started!{COLOR_RESET}")
     app.run(host='0.0.0.0', port=80)
+
 
 def main():
     """Main function to load credentials, connect to Wi-Fi, and run operations."""
