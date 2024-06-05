@@ -209,7 +209,7 @@ def main():
             repo = "Andre-cmd-rgb/Star-Os-Micropython"
             file_list = ["Src/Star-Os.py"]
             download_files_from_github(repo, file_list, MAIN_DIR)
-            download_files_from_github("miguelgrinberg/microdot", ["src/microdot.py", "src/microdot_asyncio.py"], "lib")
+            download_files_from_github("miguelgrinberg/microdot", ["src/microdot.py", "src/microdot_asyncio.py"], "lib", "v1")
             print(f"{COLOR_GREEN}Star Os installation completed successfully, rebooting...{COLOR_RESET}")
             machine.reset()
         else:
