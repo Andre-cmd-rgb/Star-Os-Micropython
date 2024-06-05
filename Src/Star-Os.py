@@ -5,24 +5,24 @@ import machine
 import network
 
 # ANSI escape codes for colors
-color_reset = "\033[0m"
-color_red = "\033[91m"
-color_green = "\033[92m"
-color_blue = "\033[94m"
-color_yellow = "\033[93m"
+COLOR_RESET = "\033[0m"
+COLOR_RED = "\033[91m"
+COLOR_GREEN = "\033[92m"
+COLOR_BLUE = "\033[94m"
+COLOR_YELLOW = "\033[93m"
 
-MainDir = "Star-Os"
+MAIN_DIR = "Star-Os"
 
 gc.enable()
 
 def load_wifi_credentials():
     """Loads Wi-Fi credentials from the saved JSON file."""
     try:
-        with open(f"{MainDir}/wifi-credentials.json", "r") as f:
+        with open(f"{MAIN_DIR}/wifi-credentials.json", "r") as f:
             wifi_credentials = json.load(f)
         return wifi_credentials['ssid'], wifi_credentials['password']
     except (OSError, ValueError, KeyError) as e:
-        print(f"{color_red}Error loading Wi-Fi credentials: {e}{color_reset}")
+        print(f"{COLOR_RED}Error loading Wi-Fi credentials: {e}{COLOR_RESET}")
         return None, None
 
 def connect_to_wifi(ssid, password):
@@ -31,7 +31,7 @@ def connect_to_wifi(ssid, password):
     wlan.active(True)
     time.sleep(1)
     wlan.config(pm=wlan.PM_NONE)
-    print(f"{color_blue}Connecting to Wi-Fi...{color_reset}")
+    print(f"{COLOR_BLUE}Connecting to Wi-Fi...{COLOR_RESET}")
     wlan.connect(ssid, password)
 
     # Wait until connected
@@ -43,27 +43,27 @@ def connect_to_wifi(ssid, password):
         max_wait -= 1
 
     if wlan.isconnected():
-        print(f"{color_green}Wi-Fi connected!{color_reset}")
+        print(f"{COLOR_GREEN}Wi-Fi connected!{COLOR_RESET}")
         print(wlan.ifconfig())
         return True
     else:
-        print(f"{color_red}Failed to connect to Wi-Fi, rebooting...{color_reset}")
+        print(f"{COLOR_RED}Failed to connect to Wi-Fi, rebooting...{COLOR_RESET}")
         machine.reset()
         return False
 
 def main_operations():
     """Main operations of the Star-OS system."""
     from microdot import Microdot
-    print(f"{color_blue}Star-OS started succesfully!{color_reset}")
+    print(f"{COLOR_BLUE}Star-OS started successfully!{COLOR_RESET}")
 
     # Initialize the web server
     app = Microdot()
 
     @app.route('/')
     def hello(request):
-        return 'Hello, World!(running on micropython)'
+        return 'Hello, World! (running on micropython)'
 
-    print(f"{color_green}Starting web server...{color_reset}")
+    print(f"{COLOR_GREEN}Starting web server...{COLOR_RESET}")
     app.run(host='0.0.0.0', port=80)
 
 def main():
@@ -73,9 +73,9 @@ def main():
         if connect_to_wifi(ssid, password):
             main_operations()
         else:
-            print(f"{color_red}Unable to proceed without Wi-Fi connection.{color_reset}")
+            print(f"{COLOR_RED}Unable to proceed without Wi-Fi connection.{COLOR_RESET}")
     else:
-        print(f"{color_red}Wi-Fi credentials not found or invalid.{color_reset}")
+        print(f"{COLOR_RED}Wi-Fi credentials not found or invalid.{COLOR_RESET}")
 
 if __name__ == "__main__":
     main()
