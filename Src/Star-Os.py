@@ -60,9 +60,12 @@ def main_operations():
     app = Microdot()
 
     @app.route('/')
-    def hello(request):
+    async def hello(request):
         return 'Hello, World! (running on micropython)'
-
+    @app.get('/shutdown')
+    async def shutdown(request):
+        request.app.shutdown()
+        return 'The server is shutting down...'
     print(f"{COLOR_GREEN}Starting web server...{COLOR_RESET}")
     app.run(host='0.0.0.0', port=80)
 
