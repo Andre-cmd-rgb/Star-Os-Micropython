@@ -53,7 +53,7 @@ def connect_to_wifi(ssid, password):
 
 def main_operations():
     """Main operations of the Star-OS system."""
-    from microdot import Microdot
+    from microdot_asyncio import Microdot, send_file
     print(f"{COLOR_BLUE}Star-OS started successfully!{COLOR_RESET}")
 
     # Initialize the web server
@@ -63,7 +63,7 @@ def main_operations():
     async def hello(request):
         return 'Hello, World! (running on micropython)'
     @app.get('/shutdown')
-    def shutdown(request):
+    async def shutdown(request):
         request.app.shutdown()
         return 'The server is shutting down...'
     print(f"{COLOR_GREEN}Starting web server...{COLOR_RESET}")
