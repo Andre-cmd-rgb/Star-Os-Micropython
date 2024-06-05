@@ -5,15 +5,15 @@ import gc
 import time
 
 # ANSI escape codes for colors
-color_reset = "\033[0m"
-color_red = "\033[91m"
-color_green = "\033[92m"
-color_yellow = "\033[93m"
-color_blue = "\033[94m"
-color_cyan = "\033[96m"
+COLOR_RESET = "\033[0m"
+COLOR_RED = "\033[91m"
+COLOR_GREEN = "\033[92m"
+COLOR_YELLOW = "\033[93m"
+COLOR_BLUE = "\033[94m"
+COLOR_CYAN = "\033[96m"
 
 # Main directory for storing Wi-Fi credentials
-MainDir = "Star-Os"
+MAIN_DIR = "Star-Os"
 
 gc.enable()
 
@@ -22,18 +22,16 @@ def detect_board():
     board_info = {}
 
     try:
-        # Getting frequency in MHz for easier reading
         freq = machine.freq()
-        if isinstance(freq, tuple):  # If freq returns a tuple (ESP32, for example)
+        if isinstance(freq, tuple):
             board_info['freq'] = ' / '.join(f'{f // 10**6} MHz' for f in freq)
         else:
             board_info['freq'] = f'{freq // 10**6} MHz'
     except Exception as e:
         board_info['freq'] = "Unknown"
-        print(f"{color_red}Error retrieving frequency: {e}{color_reset}")
+        print(f"{COLOR_RED}Error retrieving frequency: {e}{COLOR_RESET}")
 
     try:
-        # Getting the board name and firmware details
         uname = os.uname()
         board_info['board'] = uname.machine
         board_info['version'] = uname.version
@@ -42,18 +40,16 @@ def detect_board():
         board_info['board'] = "Unknown"
         board_info['version'] = "Unknown"
         board_info['release'] = "Unknown"
-        print(f"{color_red}Error retrieving uname information{color_reset}")
+        print(f"{COLOR_RED}Error retrieving uname information{COLOR_RESET}")
 
     try:
-        # Getting memory information
         board_info['mem_free'] = gc.mem_free()
         board_info['mem_alloc'] = gc.mem_alloc()
     except Exception as e:
         board_info['mem_free'] = "Unknown"
         board_info['mem_alloc'] = "Unknown"
-        print(f"{color_red}Error retrieving memory information: {e}{color_reset}")
+        print(f"{COLOR_RED}Error retrieving memory information: {e}{COLOR_RESET}")
 
-    # Check Wi-Fi support
     try:
         import network
         board_info['wifi_support'] = 'yes' if 'WLAN' in dir(network) else 'no'
@@ -68,7 +64,7 @@ def save_setup_info(board_info):
         with open("setupinfo.json", "w") as f:
             json.dump(board_info, f)
     except Exception as e:
-        print(f"{color_red}Error saving setup info: {e}{color_reset}")
+        print(f"{COLOR_RED}Error saving setup info: {e}{COLOR_RESET}")
 
 def save_wifi_credentials(ssid, password):
     """Saves Wi-Fi credentials to a JSON file."""
@@ -77,18 +73,17 @@ def save_wifi_credentials(ssid, password):
         'password': password
     }
     try:
-        # Check if directory exists and create if not
-        if MainDir not in os.listdir():
-            os.mkdir(MainDir)
-        with open(f"{MainDir}/wifi-credentials.json", "w") as f:
+        if MAIN_DIR not in os.listdir():
+            os.mkdir(MAIN_DIR)
+        with open(f"{MAIN_DIR}/wifi-credentials.json", "w") as f:
             json.dump(wifi_credentials, f)
     except Exception as e:
-        print(f"{color_red}Error saving Wi-Fi credentials: {e}{color_reset}")
+        print(f"{COLOR_RED}Error saving Wi-Fi credentials: {e}{COLOR_RESET}")
 
 def load_wifi_credentials():
     """Loads Wi-Fi credentials from the saved JSON file."""
     try:
-        with open(f"{MainDir}/wifi-credentials.json", "r") as f:
+        with open(f"{MAIN_DIR}/wifi-credentials.json", "r") as f:
             wifi_credentials = json.load(f)
         return wifi_credentials['ssid'], wifi_credentials['password']
     except (OSError, ValueError, KeyError) as e:
@@ -100,16 +95,16 @@ def print_colored_info():
         with open("setupinfo.json", "r") as f:
             json_data = json.load(f)
 
-        print(f"{color_cyan}Board Information:{color_reset}")
-        print(f"{color_green}Board: {color_reset}{json_data['board']}")
-        print(f"{color_green}Micropython Version: {color_reset}{json_data['version']}")
-        print(f"{color_green}Micropython Release: {color_reset}{json_data['release']}")
-        print(f"{color_green}CPU Frequency: {color_reset}{json_data['freq']}")
-        print(f"{color_green}Free Memory: {color_reset}{json_data['mem_free']} bytes")
-        print(f"{color_green}Allocated Memory: {color_reset}{json_data['mem_alloc']} bytes")
-        print(f"{color_green}Wi-Fi Support: {color_reset}{json_data['wifi_support']}")
+        print(f"{COLOR_CYAN}Board Information:{COLOR_RESET}")
+        print(f"{COLOR_GREEN}Board: {COLOR_RESET}{json_data['board']}")
+        print(f"{COLOR_GREEN}Micropython Version: {COLOR_RESET}{json_data['version']}")
+        print(f"{COLOR_GREEN}Micropython Release: {COLOR_RESET}{json_data['release']}")
+        print(f"{COLOR_GREEN}CPU Frequency: {COLOR_RESET}{json_data['freq']}")
+        print(f"{COLOR_GREEN}Free Memory: {COLOR_RESET}{json_data['mem_free']} bytes")
+        print(f"{COLOR_GREEN}Allocated Memory: {COLOR_RESET}{json_data['mem_alloc']} bytes")
+        print(f"{COLOR_GREEN}Wi-Fi Support: {COLOR_RESET}{json_data['wifi_support']}")
     except Exception as e:
-        print(f"{color_red}Error printing board information: {e}{color_reset}")
+        print(f"{COLOR_RED}Error printing board information: {e}{COLOR_RESET}")
 
 def setup_wifi(info):
     """Sets up the Wi-Fi connection."""
@@ -119,40 +114,29 @@ def setup_wifi(info):
         ssid = input("Enter Wi-Fi SSID: ")
         password = input("Enter Wi-Fi password: ")
         save_wifi_credentials(ssid, password)
-        ssid, password = load_wifi_credentials()  # Reload credentials
+        ssid, password = load_wifi_credentials()
 
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
     time.sleep(1)
     wlan.config(pm=wlan.PM_NONE)
-    print(f"{color_blue}Connecting to Wi-Fi...{color_reset}")
+    print(f"{COLOR_BLUE}Connecting to Wi-Fi...{COLOR_RESET}")
     wlan.connect(ssid, password)
-    
-    # Wait until connected
+
     max_wait = 10
     while max_wait > 0:
         if wlan.isconnected():
             break
         time.sleep(1)
         max_wait -= 1
-    
+
     if wlan.isconnected():
-        print(f"{color_green}Wi-Fi connected!{color_reset}")
+        print(f"{COLOR_GREEN}Wi-Fi connected!{COLOR_RESET}")
         print(wlan.ifconfig())
     else:
-        print(f"{color_red}Failed to connect to Wi-Fi{color_reset}")
+        print(f"{COLOR_RED}Failed to connect to Wi-Fi{COLOR_RESET}")
         if info['board'] == 'Arduino Portenta H7 with STM32H747':
-            # Rebooting only if board is Portenta H7 because the Wi-Fi works one time out of 2
             machine.reset()
-
-def ensure_directories_exist(filepath):
-    """Ensure all directories in the given file path exist."""
-    directories = filepath.split('/')[:-1]
-    current_path = ''
-    for directory in directories:
-        current_path = f"{current_path}/{directory}".strip('/')
-        if current_path not in os.listdir():
-            os.mkdir(current_path)
 
 def ensure_directory_exists(directory):
     """Ensures that the directory exists."""
@@ -162,17 +146,14 @@ def ensure_directory_exists(directory):
         try:
             os.mkdir(directory)
         except OSError as e:
-            print(f"Error creating directory {directory}: {e}")
+            print(f"{COLOR_RED}Error creating directory {directory}: {e}{COLOR_RESET}")
             raise
 
 def download_files_from_github(repo, file_list, dest_dir):
-    import urequests
     """Downloads specified files from a GitHub repository and saves them directly to dest_dir."""
+    import urequests
     base_url = f"https://raw.githubusercontent.com/{repo}/master/"
 
-
-
-    # Ensure dest_dir exists
     try:
         ensure_directory_exists(dest_dir)
     except OSError:
@@ -183,9 +164,8 @@ def download_files_from_github(repo, file_list, dest_dir):
         filename = file.split('/')[-1]
         file_path = f"{dest_dir}/{filename}"
 
-        # Check if file already exists
         if filename in os.listdir(dest_dir):
-            print(f"{color_red}File {filename} already exists in {dest_dir}. Skipping.{color_reset}")
+            print(f"{COLOR_RED}File {filename} already exists in {dest_dir}. Skipping.{COLOR_RESET}")
             continue
 
         retries = 3
@@ -195,27 +175,28 @@ def download_files_from_github(repo, file_list, dest_dir):
                 if response.status_code == 200:
                     with open(file_path, "wb") as f:
                         f.write(response.content)
-                    print(f"{color_green}Downloaded: {filename}{color_reset}")
+                    print(f"{COLOR_GREEN}Downloaded: {filename}{COLOR_RESET}")
                     break
                 else:
-                    print(f"{color_red}Failed to download {filename}: {response.status_code}{color_reset}")
+                    print(f"{COLOR_RED}Failed to download {filename}: {response.status_code}{COLOR_RESET}")
                     retries -= 1
             except OSError as e:
-                print(f"{color_red}Error downloading {filename}: {e}{color_reset}")
+                print(f"{COLOR_RED}Error downloading {filename}: {e}{COLOR_RESET}")
                 retries -= 1
             finally:
                 if 'response' in locals():
                     response.close()
-        
+
         if retries == 0:
-            print(f"{color_red}Max retries exceeded for {filename}. Skipping.{color_reset}")
+            print(f"{COLOR_RED}Max retries exceeded for {filename}. Skipping.{COLOR_RESET}")
+
 def main():
-    if MainDir in os.listdir() and "Star-Os.py" in os.listdir(MainDir):
-        print(f"{color_yellow}Star-Os.py found. Running the script...{color_reset}")
+    if MAIN_DIR in os.listdir() and "Star-Os.py" in os.listdir(MAIN_DIR):
+        print(f"{COLOR_YELLOW}Star-Os.py found. Running the script...{COLOR_RESET}")
         try:
-            exec(open(f"{MainDir}/Star-Os.py").read())
+            exec(open(f"{MAIN_DIR}/Star-Os.py").read())
         except Exception as e:
-            print(f"{color_red}Error running Star-Os.py: {e}{color_reset}")
+            print(f"{COLOR_RED}Error running Star-Os.py: {e}{COLOR_RESET}")
     else:
         info = detect_board()
         save_setup_info(info)
@@ -225,15 +206,14 @@ def main():
             setup_wifi(info)
             import mip
             mip.install("urequests")
-            # Example usage for downloading files from GitHub
             repo = "Andre-cmd-rgb/Star-Os-Micropython"
             file_list = ["Src/Star-Os.py"]
-            download_files_from_github(repo, file_list, MainDir)
+            download_files_from_github(repo, file_list, MAIN_DIR)
             download_files_from_github("miguelgrinberg/microdot", ["src/microdot/microdot.py", "src/microdot/__init__.py"], "lib/microdot")
-            print(f"{color_green}Star Os installation completed succesfully!, rebooting...{color_reset}")
+            print(f"{COLOR_GREEN}Star Os installation completed successfully, rebooting...{COLOR_RESET}")
             machine.reset()
         else:
-            print(f"{color_red}Wi-Fi not supported on this board, skipping installation!{color_reset}")
+            print(f"{COLOR_RED}Wi-Fi not supported on this board, skipping installation!{COLOR_RESET}")
 
 if __name__ == "__main__":
     main()
