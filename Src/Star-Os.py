@@ -1,17 +1,18 @@
-import json
+import ujson
 import gc
 import time
 import machine
 import network
+from microdot_asyncio import Microdot, Response, send_file
 
-# ANSI escape codes for colors
+# Constants
 COLOR_RESET = "\033[0m"
 COLOR_RED = "\033[91m"
 COLOR_GREEN = "\033[92m"
 COLOR_BLUE = "\033[94m"
 COLOR_YELLOW = "\033[93m"
-
 MAIN_DIR = "Star-Os"
+DYNAMIC_ROUTES_FILE = f"{MAIN_DIR}/dynamic_routes.json"
 
 gc.enable()
 
@@ -19,11 +20,30 @@ def load_wifi_credentials():
     """Loads Wi-Fi credentials from the saved JSON file."""
     try:
         with open(f"{MAIN_DIR}/wifi-credentials.json", "r") as f:
-            wifi_credentials = json.load(f)
-        return wifi_credentials['ssid'], wifi_credentials['password']
-    except (OSError, ValueError, KeyError) as e:
+            wifi_credentials = ujson.load(f)
+        return wifi_credentials.get('ssid'), wifi_credentials.get('password')
+    except OSError as e:
         print(f"{COLOR_RED}Error loading Wi-Fi credentials: {e}{COLOR_RESET}")
         return None, None
+
+def save_dynamic_routes(routes):
+    """Saves dynamic routes to a JSON file."""
+    try:
+        with open(DYNAMIC_ROUTES_FILE, "w") as f:
+            ujson.dump(routes, f)
+    except OSError as e:
+        print(f"{COLOR_RED}Error saving dynamic routes: {e}{COLOR_RESET}")
+
+def load_dynamic_routes():
+    """Loads dynamic routes from the saved JSON file."""
+    try:
+        with open(DYNAMIC_ROUTES_FILE, "r") as f:
+            return ujson.load(f)
+    except OSError as e:
+        print(f"{COLOR_YELLOW}Dynamic routes file not found or invalid, creating new file.{COLOR_RESET}")
+        # Create a new empty file if it doesn't exist or is invalid
+        save_dynamic_routes({})
+        return {}
 
 def connect_to_wifi(ssid, password):
     """Connects to the Wi-Fi using the provided SSID and password."""
@@ -51,22 +71,51 @@ def connect_to_wifi(ssid, password):
         machine.reset()
         return False
 
-def main_operations():
-    """Main operations of the Star-OS system."""
-    from microdot_asyncio import Microdot, send_file
+def handle_dynamic_route(request, path, routes):
+    """Handles dynamic route requests."""
+    if path in routes:
+        return routes[path]
+    return 'Route not found.', 404
+
+def main_operations(app, routes):
+    """Configures and runs the main operations of the Star-OS system."""
     print(f"{COLOR_BLUE}Star-OS started successfully!{COLOR_RESET}")
 
-    # Initialize the web server
-    app = Microdot()
-
     @app.route('/')
-    async def hello(request):
-        return 'Hello, World! (running on micropython)'
-    @app.get('/shutdown')
-    async def shutdown(request):
-        request.app.shutdown()
-        return 'The server is shutting down...'
-    print(f"{COLOR_GREEN}Starting web server...{COLOR_RESET}")
+    def index(request):
+        return send_file(MAIN_DIR + '/index.html')
+
+    @app.route('/create', methods=['POST'])
+    def create_route(request):
+        data = ujson.loads(request.body)
+        path = data.get('path')
+        response = data.get('response')
+
+        if path and response:
+            routes[path.strip('/')] = response
+            save_dynamic_routes(routes)  # Save routes to file
+            return 'Route created successfully.', 201
+        return 'Invalid data.', 400
+
+    @app.route('/delete', methods=['POST'])
+    def delete_route(request):
+        data = ujson.loads(request.body)
+        path = data.get('path')
+
+        if path and path.strip('/') in routes:
+            del routes[path.strip('/')]
+            save_dynamic_routes(routes)  # Save routes to file
+            return 'Route deleted successfully.', 200
+        return 'Route not found.', 404
+
+    @app.route('/routes', methods=['GET'])
+    def list_routes(request):
+        return Response(ujson.dumps(routes))
+
+    @app.route('/<path:path>')
+    def dynamic_route(request, path):
+        return handle_dynamic_route(request, path, routes)
+
     app.run(host='0.0.0.0', port=80)
 
 def main():
@@ -74,7 +123,9 @@ def main():
     ssid, password = load_wifi_credentials()
     if ssid and password:
         if connect_to_wifi(ssid, password):
-            main_operations()
+            app = Microdot()
+            routes = load_dynamic_routes()
+            main_operations(app, routes)
         else:
             print(f"{COLOR_RED}Unable to proceed without Wi-Fi connection.{COLOR_RESET}")
     else:

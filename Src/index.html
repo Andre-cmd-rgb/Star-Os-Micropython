@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Management</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        .list-group-item {
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .route-link {
+            cursor: pointer;
+        }
+
+        .success-message {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            padding: 0.75rem 1.25rem;
+            margin-top: 10px;
+            border: 1px solid transparent;
+            border-radius: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-primary">Route Management</h1>
+        <div class="row">
+            <div class="col-md-6">
+                <h2>Create Route</h2>
+                <form id="createForm">
+                    <div class="form-group">
+                        <label for="path">Path:</label>
+                        <input type="text" class="form-control" id="path" name="path">
+                    </div>
+                    <div class="form-group">
+                        <label for="response">Response:</label>
+                        <input type="text" class="form-control" id="response" name="response">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block rounded-pill">Create Route</button>
+                    <div id="successMessage" class="success-message d-none">Route created successfully.</div>
+                </form>
+            </div>
+        </div>
+        
+        <h2>Existing Routes</h2>
+        <div id="routesList" class="list-group"></div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.getElementById('createForm').onsubmit = function(event) {
+            event.preventDefault();
+            const path = document.getElementById('path').value;
+            const response = document.getElementById('response').value;
+
+            fetch('/create', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({path: path, response: response})
+            })
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('successMessage').classList.remove('d-none');
+                loadRoutes();
+            });
+        };
+
+        function loadRoutes() {
+            fetch('/routes')
+                .then(response => response.json())
+                .then(data => {
+                    const routesList = document.getElementById('routesList');
+                    routesList.innerHTML = '';
+                    for (const path in data) {
+                        const listItem = document.createElement('div');
+                        listItem.className = 'list-group-item list-group-item-action rounded-pill d-flex justify-content-between align-items-center';
+                        listItem.innerHTML = `
+                            <span class="route-link" onclick="window.open('${path}', '_blank')"><i class="fas fa-link"></i> ${path}: ${data[path]}</span>
+                            <button class="btn btn-sm btn-danger rounded-pill" onclick="deleteRoute('${path}')">Delete</button>
+                        `;
+                        routesList.appendChild(listItem);
+                    }
+                });
+        }
+
+        function deleteRoute(path) {
+            fetch('/delete', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({path: path})
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                loadRoutes();
+            });
+        }
+
+        window.onload = loadRoutes;
+    </script>
+</body>
+</html>
+
