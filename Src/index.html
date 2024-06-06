@@ -11,7 +11,7 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(to right, #ece9e6, #ffffff);
+            background: linear-gradient(to right, #ffffff, #ece9e6);
             color: #333;
         }
 
@@ -24,7 +24,7 @@
         .list-group-item {
             padding: 15px;
             margin-bottom: 20px;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.9);
             border: 1px solid rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
             border-radius: 10px;
@@ -47,17 +47,17 @@
         .sidebar {
             position: fixed;
             top: 0;
-            left: 0;
+            right: 0;
             height: 100%;
             width: 250px;
-            background: rgba(255, 255, 255, 0.8);
-            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.9);
+            border-left: 1px solid rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
             padding: 20px;
-            transform: translateX(-100%);
+            transform: translateX(100%);
             transition: transform 0.3s ease;
             z-index: 1000;
         }
@@ -69,7 +69,7 @@
         .sidebar-toggle {
             position: fixed;
             top: 10px;
-            left: 260px;
+            right: 260px;
             z-index: 1100;
         }
 
@@ -110,7 +110,7 @@
                 position: fixed;
                 bottom: 0;
                 top: auto;
-                left: 0;
+                right: 0;
                 transform: translateY(100%);
                 transition: transform 0.3s ease;
             }
@@ -120,7 +120,7 @@
             }
 
             .sidebar-toggle {
-                left: 10px;
+                right: 10px;
                 top: auto;
                 bottom: 70px;
             }
@@ -148,7 +148,7 @@
             </div>
         </div>
         
-        <h2>Existing Routes</h2>
+        <h2 style="margin-top: 20px; margin-bottom: 20px;">Existing Routes</h2>
         <div id="routesList" class="list-group"></div>
     </div>
 
