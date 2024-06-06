@@ -201,7 +201,7 @@
 
         function shutdownServer() {
             fetch('/shutdown', {
-                method: 'POST'
+                method: 'GET'
             })
             .then(response => response.text())
             .then(data => {

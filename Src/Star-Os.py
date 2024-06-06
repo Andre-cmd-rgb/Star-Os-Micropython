@@ -84,7 +84,12 @@ def main_operations(app, routes):
     @app.route('/')
     async def index(request):
         return send_file(MAIN_DIR + '/index.html')
-
+    
+    @app.route('/shutdown')
+    def shutdown(request):
+        request.app.shutdown()
+        return 'The server is shutting down...'
+    
     @app.route('/create', methods=['POST'])
     async def create_route(request):
         data = ujson.loads(request.body)
@@ -120,9 +125,7 @@ def main_operations(app, routes):
     async def not_found(request):
         return 'Not found'
 
-    @app.route('/shutdown')
-    def shutdown(request):
-        request.app.shutdown()
+    
 
     app.run(host='0.0.0.0', port=80, debug=True)
 
