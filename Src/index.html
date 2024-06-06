@@ -27,6 +27,24 @@
             border: 1px solid transparent;
             border-radius: 0.25rem;
         }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100%;
+            width: 200px;
+            background-color: #f8f9fa;
+            border-left: 1px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 20px;
+        }
+
+        .shutdown-btn {
+            margin-top: auto;
+        }
     </style>
 </head>
 <body>
@@ -54,7 +72,41 @@
         <div id="routesList" class="list-group"></div>
     </div>
 
+    <!-- Edit Route Modal -->
+    <div class="modal fade" id="editRouteModal" tabindex="-1" aria-labelledby="editRouteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editRouteModalLabel">Edit Route</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <div class="form-group">
+                            <label for="editPath">Path:</label>
+                            <input type="text" class="form-control" id="editPath" name="path" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editResponse">Response:</label>
+                            <input type="text" class="form-control" id="editResponse" name="response">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Menu -->
+    <div class="sidebar">
+        <button class="btn btn-danger btn-block shutdown-btn" onclick="shutdownServer()">Shutdown</button>
+    </div>
+
     <!-- Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
         document.getElementById('createForm').onsubmit = function(event) {
@@ -62,16 +114,26 @@
             const path = document.getElementById('path').value;
             const response = document.getElementById('response').value;
 
-            fetch('/create', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({path: path, response: response})
-            })
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('successMessage').classList.remove('d-none');
-                loadRoutes();
-            });
+            // Check if the route already exists
+            fetch('/routes')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.hasOwnProperty(path)) {
+                        alert('Route already exists. Please use a different path.');
+                    } else {
+                        // If the route doesn't exist, create it
+                        fetch('/create', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({path: path, response: response})
+                        })
+                        .then(response => response.text())
+                        .then(data => {
+                            document.getElementById('successMessage').classList.remove('d-none');
+                            loadRoutes();
+                        });
+                    }
+                });
         };
 
         function loadRoutes() {
@@ -85,7 +147,10 @@
                         listItem.className = 'list-group-item list-group-item-action rounded-pill d-flex justify-content-between align-items-center';
                         listItem.innerHTML = `
                             <span class="route-link" onclick="window.open('${path}', '_blank')"><i class="fas fa-link"></i> ${path}: ${data[path]}</span>
-                            <button class="btn btn-sm btn-danger rounded-pill" onclick="deleteRoute('${path}')">Delete</button>
+                            <div>
+                                <button class="btn btn-sm btn-warning rounded-pill" onclick="openEditModal('${path}', '${data[path]}')">Edit</button>
+                                <button class="btn btn-sm btn-danger rounded-pill" onclick="confirmDeleteRoute('${path}')">Delete</button>
+                            </div>
                         `;
                         routesList.appendChild(listItem);
                     }
@@ -105,8 +170,46 @@
             });
         }
 
+        function confirmDeleteRoute(path) {
+            if (confirm(`Are you sure you want to delete the route ${path}?`)) {
+                deleteRoute(path);
+            }
+        }
+
+        function openEditModal(path, response) {
+            document.getElementById('editPath').value = path;
+            document.getElementById('editResponse').value = response;
+            $('#editRouteModal').modal('show');
+            
+            document.getElementById('editForm').onsubmit = function(event) {
+                event.preventDefault();
+                const updatedPath = document.getElementById('editPath').value;
+                const updatedResponse = document.getElementById('editResponse').value;
+
+                fetch('/create', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({path: updatedPath, response: updatedResponse})
+                })
+                .then(response => response.text())
+                .then(data => {
+                    $('#editRouteModal').modal('hide');
+                    loadRoutes();
+                });
+            };
+        }
+
+        function shutdownServer() {
+            fetch('/shutdown', {
+                method: 'POST'
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert('Server is shutting down...');
+            });
+        }
+
         window.onload = loadRoutes;
     </script>
 </body>
 </html>
-

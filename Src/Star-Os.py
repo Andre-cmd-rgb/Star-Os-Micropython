@@ -82,11 +82,11 @@ def main_operations(app, routes):
     print(f"{COLOR_BLUE}Star-OS started successfully!{COLOR_RESET}")
 
     @app.route('/')
-    def index(request):
+    async def index(request):
         return send_file(MAIN_DIR + '/index.html')
 
     @app.route('/create', methods=['POST'])
-    def create_route(request):
+    async def create_route(request):
         data = ujson.loads(request.body)
         path = data.get('path')
         response = data.get('response')
@@ -98,7 +98,7 @@ def main_operations(app, routes):
         return 'Invalid data.', 400
 
     @app.route('/delete', methods=['POST'])
-    def delete_route(request):
+    async def delete_route(request):
         data = ujson.loads(request.body)
         path = data.get('path')
 
@@ -109,14 +109,22 @@ def main_operations(app, routes):
         return 'Route not found.', 404
 
     @app.route('/routes', methods=['GET'])
-    def list_routes(request):
+    async def list_routes(request):
         return Response(ujson.dumps(routes))
 
     @app.route('/<path:path>')
-    def dynamic_route(request, path):
+    async def dynamic_route(request, path):
         return handle_dynamic_route(request, path, routes)
+    
+    @app.errorhandler(404)
+    async def not_found(request):
+        return 'Not found'
 
-    app.run(host='0.0.0.0', port=80)
+    @app.route('/shutdown')
+    def shutdown(request):
+        request.app.shutdown()
+
+    app.run(host='0.0.0.0', port=80, debug=True)
 
 def main():
     """Main function to load credentials, connect to Wi-Fi, and run operations."""
