@@ -38,12 +38,38 @@
             border-left: 1px solid #dee2e6;
             display: flex;
             flex-direction: column;
-            justify-content: flex-end;
+            justify-content: flex-start;
             padding: 20px;
         }
 
         .shutdown-btn {
             margin-top: auto;
+        }
+
+        .status-light {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: red;
+            margin-right: 10px;
+        }
+
+        .status-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .status-text {
+            font-weight: bold;
+        }
+
+        .online {
+            color: green;
+        }
+
+        .offline {
+            color: red;
         }
     </style>
 </head>
@@ -101,6 +127,10 @@
 
     <!-- Sidebar Menu -->
     <div class="sidebar">
+        <div class="status-container">
+            <span id="status-light" class="status-light"></span>
+            <span id="status-text" class="status-text offline">Offline</span>
+        </div>
         <button class="btn btn-danger btn-block shutdown-btn" onclick="shutdownServer()">Shutdown</button>
     </div>
 
@@ -210,6 +240,45 @@
         }
 
         window.onload = loadRoutes;
+
+        async function checkStatus() {
+            try {
+                const response = await fetch('/status', {
+                    method: 'POST',
+                });
+                const statusLight = document.getElementById('status-light');
+                const statusText = document.getElementById('status-text');
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.status === "up") {
+                        statusLight.style.backgroundColor = 'green';
+                        statusText.textContent = "Online";
+                        statusText.classList.remove("offline");
+                        statusText.classList.add("online");
+                    } else {
+                        statusLight.style.backgroundColor = 'red';
+                        statusText.textContent = "Offline";
+                        statusText.classList.remove("online");
+                        statusText.classList.add("offline");
+                    }
+                } else {
+                    statusLight.style.backgroundColor = 'red';
+                    statusText.textContent = "Offline";
+                    statusText.classList.remove("online");
+                    statusText.classList.add("offline");
+                }
+            } catch (error) {
+                const statusLight = document.getElementById('status-light');
+                const statusText = document.getElementById('status-text');
+                statusLight.style.backgroundColor = 'red';
+                statusText.textContent = "Offline";
+                statusText.classList.remove("online");
+                statusText.classList.add("offline");
+            }
+        }
+
+        setInterval(checkStatus, 10000);
+        checkStatus();
     </script>
 </body>
 </html>

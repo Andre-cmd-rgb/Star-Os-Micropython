@@ -84,11 +84,15 @@ def main_operations(app, routes):
     @app.route('/')
     async def index(request):
         return send_file(MAIN_DIR + '/index.html')
-    
+
     @app.route('/shutdown')
     def shutdown(request):
         request.app.shutdown()
         return 'The server is shutting down...'
+
+    @app.route('/status', methods=['POST'])
+    async def status(request):
+        return Response('{"status": "up"}', headers={'Content-Type': 'application/json'})
     
     @app.route('/create', methods=['POST'])
     async def create_route(request):
@@ -125,9 +129,8 @@ def main_operations(app, routes):
     async def not_found(request):
         return 'Not found'
 
-    
-
     app.run(host='0.0.0.0', port=80, debug=True)
+
 
 def main():
     """Main function to load credentials, connect to Wi-Fi, and run operations."""
