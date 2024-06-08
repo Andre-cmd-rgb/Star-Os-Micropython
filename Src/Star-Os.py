@@ -6,7 +6,17 @@ import network
 import uos
 import sys
 from microdot_asyncio import Microdot, Response, send_file
-import updater
+from updater import Updater
+
+
+# Initialize the updater
+updater = Updater(
+    user="Andre-cmd-rgb",
+    repo="Star-Os-Micropython",
+    branch="main",  # Specify the branch of your repository
+    dest_dir="/Star-Os",  # Specify the destination directory where files should be saved
+    files=["Star-Os.py", "index.html"],  # List of files to include in the OTA update
+)
 
 # Constants
 COLOR_RESET = "\033[0m"
@@ -199,7 +209,17 @@ def main():
         if connect_to_wifi(ssid, password):
             gc.collect()
             print(f"{COLOR_GREEN}Checking for updates...{COLOR_RESET}")
-            check_for_updates()
+            # Check if newer version is available
+            if updater.fetch():
+                print("Newer version available. Updating...")
+
+                # Perform the update
+                if updater.update():
+                    print("Update successful.")
+                else:
+                    print("Update failed.")
+            else:
+                print("No newer version available.")
             gc.collect()
             app = Microdot()
             routes = load_dynamic_routes()
