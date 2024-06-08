@@ -1,6 +1,7 @@
 import urequests
 import uhashlib
-
+import gc
+gc.enable()
 class Updater:
     raw = "https://raw.githubusercontent.com"
     github = "https://github.com"
@@ -25,6 +26,7 @@ class Updater:
         self.dest_dir = dest_dir
 
     def _check_hash(self, x, y):
+        gc.collect()
         x_hash = uhashlib.sha1(x.encode())
         y_hash = uhashlib.sha1(y.encode())
 
@@ -34,6 +36,7 @@ class Updater:
         return x == y
 
     def _get_file(self, url):
+        gc.collect()
         payload = urequests.get(url, headers=self.headers)
         code = payload.status_code
 
@@ -43,6 +46,7 @@ class Updater:
             return None
 
     def _check_all(self):
+        gc.collect()
         changes = []
 
         for file in self.files:
@@ -64,6 +68,7 @@ class Updater:
         return changes
 
     def fetch(self):
+        gc.collect()
         """Check if newer version is available.
 
         Returns:
@@ -72,6 +77,7 @@ class Updater:
         return bool(self._check_all())
 
     def update(self):
+        gc.collect()
         """Replace all changed files with newer one.
 
         Returns:

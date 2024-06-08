@@ -32,6 +32,7 @@ gc.enable()
 gc.collect()
 def load_wifi_credentials():
     """Loads Wi-Fi credentials from the saved JSON file."""
+    gc.collect()
     try:
         with open(f"{MAIN_DIR}/wifi-credentials.json", "r") as f:
             wifi_credentials = ujson.load(f)
@@ -42,6 +43,7 @@ def load_wifi_credentials():
 
 def save_dynamic_routes(routes):
     """Saves dynamic routes to a JSON file."""
+    gc.collect()
     try:
         with open(DYNAMIC_ROUTES_FILE, "w") as f:
             ujson.dump(routes, f)
@@ -50,6 +52,7 @@ def save_dynamic_routes(routes):
 
 def load_dynamic_routes():
     """Loads dynamic routes from the saved JSON file."""
+    gc.collect()
     try:
         with open(DYNAMIC_ROUTES_FILE, "r") as f:
             return ujson.load(f)
@@ -90,6 +93,7 @@ def connect_to_wifi(ssid, password):
 
 def handle_dynamic_route(request, path, routes):
     """Handles dynamic route requests."""
+    gc.collect()
     if path in routes:
         return routes[path]
     return 'Route not found.', 404
@@ -146,11 +150,12 @@ def main_operations(app, routes):
     @app.errorhandler(404)
     async def not_found(request):
         return 'Not found'
-
+    gc.collect()
     app.run(host='0.0.0.0', port=80, debug=True)
 
 def ensure_directory_exists(directory):
     """Ensures the specified directory exists."""
+    gc.collect()
     try:
         uos.listdir(directory)
     except OSError:
@@ -158,6 +163,7 @@ def ensure_directory_exists(directory):
 
 def file_exists(file_path):
     """Checks if the specified file exists."""
+    gc.collect()
     try:
         with open(file_path, 'r'):
             pass
@@ -167,6 +173,7 @@ def file_exists(file_path):
 
 def load_config():
     """Loads configuration settings from the config file."""
+    gc.collect()
     try:
         with open(CONFIG_FILE, "r") as f:
             return ujson.load(f)
@@ -176,6 +183,7 @@ def load_config():
 
 def save_config(config):
     """Saves configuration settings to the config file."""
+    gc.collect()
     try:
         with open(CONFIG_FILE, "w") as f:
             ujson.dump(config, f)
@@ -184,6 +192,7 @@ def save_config(config):
 
 def prompt_user_for_mode():
     """Prompts the user to choose the mode (server or slave) and saves it to the config file."""
+    gc.collect()
     config = load_config()
     if 'mode' not in config:
         while True:
@@ -198,7 +207,7 @@ def prompt_user_for_mode():
 
 def main():
     """Main function to load credentials, connect to Wi-Fi, and run operations."""
-    
+    gc.collect()
     ensure_directory_exists(MAIN_DIR)
 
     mode = prompt_user_for_mode()
@@ -209,16 +218,21 @@ def main():
         if connect_to_wifi(ssid, password):
             gc.collect()
             print(f"{COLOR_GREEN}Checking for updates...{COLOR_RESET}")
+            gc.collect()
             # Check if newer version is available
             if updater.fetch():
+                gc.collect()
                 print("Newer version available. Updating...")
 
                 # Perform the update
                 if updater.update():
+                    gc.collect()
                     print("Update successful.")
                 else:
+                    gc.collect()
                     print("Update failed.")
             else:
+                gc.collect()
                 print("No newer version available.")
             gc.collect()
             app = Microdot()
