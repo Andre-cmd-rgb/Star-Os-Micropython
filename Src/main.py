@@ -1,22 +1,143 @@
-import json
+import ujson as json
 import machine
-import os
+import uos as os
 import gc
+import usocket as socket
 import time
 
-# ANSI escape codes for colors
+# Constants
 COLOR_RESET = "\033[0m"
 COLOR_RED = "\033[91m"
 COLOR_GREEN = "\033[92m"
 COLOR_YELLOW = "\033[93m"
 COLOR_BLUE = "\033[94m"
 COLOR_CYAN = "\033[96m"
-
-# Main directory for storing Wi-Fi credentials
 MAIN_DIR = "Star-Os"
+STAROS_FILE = f"{MAIN_DIR}/Star-Os.py"
+INDEX_FILE = f"{MAIN_DIR}/index.html"
+VERSION_FILE = f"{MAIN_DIR}/version.json"
+GITHUB_REPO = "Andre-cmd-rgb/Star-Os-Micropython"
+BRANCH = "main"
 
 gc.enable()
 gc.collect()
+
+def ensure_directory_exists(directory):
+    """Ensures that the directory exists."""
+    try:
+        os.listdir(directory)
+    except OSError:
+        try:
+            os.mkdir(directory)
+        except OSError as e:
+            print(f"{COLOR_RED}Error creating directory {directory}: {e}{COLOR_RESET}")
+            raise
+
+def file_exists(file_path):
+    """Checks if the specified file exists."""
+    try:
+        with open(file_path, 'r'):
+            pass
+        return True
+    except OSError:
+        return False
+
+def download_file(url, file_path):
+    """Downloads a file from the specified URL."""
+    import urequests
+    retries = 3
+    while retries > 0:
+        try:
+            response = urequests.get(url)
+            if response.status_code == 200:
+                with open(file_path, "wb") as f:
+                    f.write(response.content)
+                print(f"{COLOR_GREEN}Downloaded: {file_path}{COLOR_RESET}")
+                gc.collect()
+                return True
+            else:
+                print(f"{COLOR_RED}Failed to download {file_path}: {response.status_code}{COLOR_RESET}")
+                retries -= 1
+        except OSError as e:
+            print(f"{COLOR_RED}Error downloading {file_path}: {e}{COLOR_RESET}")
+            retries -= 1
+        finally:
+            if 'response' in locals():
+                response.close()
+
+    if retries == 0:
+        print(f"{COLOR_RED}Max retries exceeded for {file_path}. Skipping.{COLOR_RESET}")
+        return False
+
+def get_latest_commit():
+    """Gets the latest commit hash from GitHub."""
+    import urequests
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/commits/{BRANCH}"
+    try:
+        response = urequests.get(url)
+        if response.status_code == 200:
+            commit_data = response.json()
+            return commit_data['sha']
+        else:
+            print(f"{COLOR_RED}Failed to get latest commit: {response.status_code}{COLOR_RESET}")
+            return None
+    except OSError as e:
+        print(f"{COLOR_RED}Error getting latest commit: {e}{COLOR_RESET}")
+        return None
+    finally:
+        if 'response' in locals():
+            response.close()
+
+def update_files():
+    """Checks for updates and updates files if necessary."""
+    ensure_directory_exists(MAIN_DIR)
+    latest_commit = get_latest_commit()
+    if latest_commit:
+        version_info = load_version_info()
+        if version_info.get('latest_commit') != latest_commit:
+            print(f"{COLOR_YELLOW}New update available. Updating files...{COLOR_RESET}")
+            # Delete old files
+            try:
+                os.remove(STAROS_FILE)
+                os.remove(INDEX_FILE)
+            except OSError as e:
+                print(f"{COLOR_RED}Error deleting old files: {e}{COLOR_RESET}")
+            
+            # Download new files
+            staros_url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/{BRANCH}/Src/Star-Os.py"
+            index_url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/{BRANCH}/Src/index.html"
+            download_file(staros_url, STAROS_FILE)
+            download_file(index_url, INDEX_FILE)
+
+            # Update version info with latest commit hash
+            version_info['latest_commit'] = latest_commit
+            save_version_info(version_info)
+
+            print(f"{COLOR_GREEN}Update completed, rebooting...{COLOR_RESET}")
+            time.sleep(2)
+            machine.reset()
+        else:
+            print(f"{COLOR_GREEN}No updates available. Running current version.{COLOR_RESET}")
+    else:
+        print(f"{COLOR_RED}Could not retrieve latest commit. Skipping update.{COLOR_RESET}")
+
+def load_version_info():
+    """Loads version information from the version file."""
+    try:
+        with open(VERSION_FILE, "r") as f:
+            return json.load(f)
+    except OSError as e:
+        print(f"{COLOR_YELLOW}Version file not found or invalid, creating new file.{COLOR_RESET}")
+        return {}
+
+def save_version_info(version_info):
+    """Saves version information to the version file."""
+    try:
+        with open(VERSION_FILE, "w") as f:
+            json.dump(version_info, f)
+    except OSError as e:
+        print(f"{COLOR_RED}Error saving version info: {e}{COLOR_RESET}")
+
 def detect_board():
     """Detects and returns information about the board."""
     board_info = {}
@@ -138,17 +259,6 @@ def setup_wifi(info):
         if info['board'] == 'Arduino Portenta H7 with STM32H747':
             machine.reset()
 
-def ensure_directory_exists(directory):
-    """Ensures that the directory exists."""
-    try:
-        os.listdir(directory)
-    except OSError:
-        try:
-            os.mkdir(directory)
-        except OSError as e:
-            print(f"{COLOR_RED}Error creating directory {directory}: {e}{COLOR_RESET}")
-            raise
-
 def download_files_from_github(repo, file_list, dest_dir, branch="master"):
     """Downloads specified files from a GitHub repository and saves them directly to dest_dir."""
     import urequests
@@ -192,10 +302,14 @@ def download_files_from_github(repo, file_list, dest_dir, branch="master"):
             print(f"{COLOR_RED}Max retries exceeded for {filename}. Skipping.{COLOR_RESET}")
 
 def main():
-    if MAIN_DIR in os.listdir() and "Star-Os.py" in os.listdir(MAIN_DIR):
-        print(f"{COLOR_YELLOW}Star-Os.py found. Running the script...{COLOR_RESET}")
+    
+
+    if file_exists(STAROS_FILE):
+        print(f"{COLOR_GREEN}Checking for updates...{COLOR_RESET}")
+        update_files()
+        print(f"{COLOR_BLUE}Star-Os.py found. Running the script...{COLOR_RESET}")
         try:
-            exec(open(f"{MAIN_DIR}/Star-Os.py").read())
+            exec(open(STAROS_FILE).read())
         except Exception as e:
             print(f"{COLOR_RED}Error running Star-Os.py: {e}{COLOR_RESET}")
     else:
@@ -208,7 +322,7 @@ def main():
             import mip
             mip.install("urequests")
             gc.collect()
-            repo = "Andre-cmd-rgb/Star-Os-Micropython"
+            repo = GITHUB_REPO
             file_list = ["Src/Star-Os.py", "Src/index.html"]
             download_files_from_github(repo, file_list, MAIN_DIR)
             gc.collect()
