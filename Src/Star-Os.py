@@ -3,6 +3,8 @@ import gc
 import time
 import machine
 import network
+import uos
+import sys
 from microdot_asyncio import Microdot, Response, send_file
 
 # Constants
@@ -13,6 +15,7 @@ COLOR_BLUE = "\033[94m"
 COLOR_YELLOW = "\033[93m"
 MAIN_DIR = "Star-Os"
 DYNAMIC_ROUTES_FILE = f"{MAIN_DIR}/dynamic_routes.json"
+CONFIG_FILE = f"{MAIN_DIR}/config.json"
 
 gc.enable()
 
@@ -131,9 +134,60 @@ def main_operations(app, routes):
 
     app.run(host='0.0.0.0', port=80, debug=True)
 
+def ensure_directory_exists(directory):
+    """Ensures the specified directory exists."""
+    try:
+        uos.listdir(directory)
+    except OSError:
+        uos.mkdir(directory)
+
+def file_exists(file_path):
+    """Checks if the specified file exists."""
+    try:
+        with open(file_path, 'r'):
+            pass
+        return True
+    except OSError:
+        return False
+
+def load_config():
+    """Loads configuration settings from the config file."""
+    try:
+        with open(CONFIG_FILE, "r") as f:
+            return ujson.load(f)
+    except OSError as e:
+        print(f"{COLOR_YELLOW}Config file not found or invalid, creating new file.{COLOR_RESET}")
+        return {}
+
+def save_config(config):
+    """Saves configuration settings to the config file."""
+    try:
+        with open(CONFIG_FILE, "w") as f:
+            ujson.dump(config, f)
+    except OSError as e:
+        print(f"{COLOR_RED}Error saving config: {e}{COLOR_RESET}")
+
+def prompt_user_for_mode():
+    """Prompts the user to choose the mode (server or slave) and saves it to the config file."""
+    config = load_config()
+    if 'mode' not in config:
+        while True:
+            mode = input("Do you want to run this as a server or a slave? (Enter 'server' or 'slave'): ").strip().lower()
+            if mode in ['server', 'slave']:
+                config['mode'] = mode
+                save_config(config)
+                break
+            else:
+                print(f"{COLOR_RED}Invalid input. Please enter 'server' or 'slave'.{COLOR_RESET}")
+    return config['mode']
 
 def main():
     """Main function to load credentials, connect to Wi-Fi, and run operations."""
+    ensure_directory_exists(MAIN_DIR)
+
+    mode = prompt_user_for_mode()
+    print(f"{COLOR_GREEN}Running in {mode} mode.{COLOR_RESET}")
+    
     ssid, password = load_wifi_credentials()
     if ssid and password:
         if connect_to_wifi(ssid, password):
