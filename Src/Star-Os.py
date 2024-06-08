@@ -18,7 +18,7 @@ DYNAMIC_ROUTES_FILE = f"{MAIN_DIR}/dynamic_routes.json"
 CONFIG_FILE = f"{MAIN_DIR}/config.json"
 
 gc.enable()
-
+gc.collect()
 def load_wifi_credentials():
     """Loads Wi-Fi credentials from the saved JSON file."""
     try:
@@ -55,9 +55,10 @@ def connect_to_wifi(ssid, password):
     wlan.active(True)
     time.sleep(1)
     wlan.config(pm=wlan.PM_NONE)
+    gc.collect()
     print(f"{COLOR_BLUE}Connecting to Wi-Fi...{COLOR_RESET}")
     wlan.connect(ssid, password)
-
+    gc.collect()
     # Wait until connected
     max_wait = 10
     while max_wait > 0:

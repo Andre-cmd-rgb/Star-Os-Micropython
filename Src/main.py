@@ -16,7 +16,7 @@ COLOR_CYAN = "\033[96m"
 MAIN_DIR = "Star-Os"
 
 gc.enable()
-
+gc.collect()
 def detect_board():
     """Detects and returns information about the board."""
     board_info = {}
@@ -207,15 +207,18 @@ def main():
             setup_wifi(info)
             import mip
             mip.install("urequests")
+            gc.collect()
             repo = "Andre-cmd-rgb/Star-Os-Micropython"
             file_list = ["Src/Star-Os.py", "Src/index.html"]
             download_files_from_github(repo, file_list, MAIN_DIR)
             gc.collect()
             download_files_from_github("miguelgrinberg/microdot", ["src/microdot.py", "src/microdot_asyncio.py"], "lib", "v1")
             print(f"{COLOR_GREEN}Star Os installation completed successfully, rebooting...{COLOR_RESET}")
+            gc.collect()
             machine.reset()
         else:
             print(f"{COLOR_RED}Wi-Fi not supported on this board, skipping installation!{COLOR_RESET}")
 
 if __name__ == "__main__":
+    gc.collect()
     main()
