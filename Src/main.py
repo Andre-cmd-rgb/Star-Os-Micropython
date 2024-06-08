@@ -176,6 +176,7 @@ def download_files_from_github(repo, file_list, dest_dir, branch="master"):
                     with open(file_path, "wb") as f:
                         f.write(response.content)
                     print(f"{COLOR_GREEN}Downloaded: {filename}{COLOR_RESET}")
+                    gc.collect()
                     break
                 else:
                     print(f"{COLOR_RED}Failed to download {filename}: {response.status_code}{COLOR_RESET}")
@@ -209,6 +210,7 @@ def main():
             repo = "Andre-cmd-rgb/Star-Os-Micropython"
             file_list = ["Src/Star-Os.py", "Src/index.html"]
             download_files_from_github(repo, file_list, MAIN_DIR)
+            gc.collect()
             download_files_from_github("miguelgrinberg/microdot", ["src/microdot.py", "src/microdot_asyncio.py"], "lib", "v1")
             print(f"{COLOR_GREEN}Star Os installation completed successfully, rebooting...{COLOR_RESET}")
             machine.reset()

@@ -50,6 +50,7 @@ def load_dynamic_routes():
 
 def connect_to_wifi(ssid, password):
     """Connects to the Wi-Fi using the provided SSID and password."""
+    gc.collect()
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
     time.sleep(1)
@@ -68,6 +69,7 @@ def connect_to_wifi(ssid, password):
     if wlan.isconnected():
         print(f"{COLOR_GREEN}Wi-Fi connected!{COLOR_RESET}")
         print(wlan.ifconfig())
+        gc.collect()
         return True
     else:
         print(f"{COLOR_RED}Failed to connect to Wi-Fi, rebooting...{COLOR_RESET}")
@@ -83,6 +85,7 @@ def handle_dynamic_route(request, path, routes):
 def main_operations(app, routes):
     """Configures and runs the main operations of the Star-OS system."""
     print(f"{COLOR_BLUE}Star-OS started successfully!{COLOR_RESET}")
+    gc.collect()
 
     @app.route('/')
     async def index(request):
@@ -187,10 +190,11 @@ def main():
 
     mode = prompt_user_for_mode()
     print(f"{COLOR_GREEN}Running in {mode} mode.{COLOR_RESET}")
-    
+    gc.collect()
     ssid, password = load_wifi_credentials()
     if ssid and password:
         if connect_to_wifi(ssid, password):
+            gc.collect()
             app = Microdot()
             routes = load_dynamic_routes()
             main_operations(app, routes)
@@ -200,4 +204,5 @@ def main():
         print(f"{COLOR_RED}Wi-Fi credentials not found or invalid.{COLOR_RESET}")
 
 if __name__ == "__main__":
+    gc.collect()
     main()
