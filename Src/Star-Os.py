@@ -6,6 +6,7 @@ import network
 import uos
 import sys
 from microdot_asyncio import Microdot, Response, send_file
+import updater
 
 # Constants
 COLOR_RESET = "\033[0m"
@@ -187,6 +188,7 @@ def prompt_user_for_mode():
 
 def main():
     """Main function to load credentials, connect to Wi-Fi, and run operations."""
+    
     ensure_directory_exists(MAIN_DIR)
 
     mode = prompt_user_for_mode()
@@ -195,6 +197,9 @@ def main():
     ssid, password = load_wifi_credentials()
     if ssid and password:
         if connect_to_wifi(ssid, password):
+            gc.collect()
+            print(f"{COLOR_GREEN}Checking for updates...{COLOR_RESET}")
+            check_for_updates()
             gc.collect()
             app = Microdot()
             routes = load_dynamic_routes()

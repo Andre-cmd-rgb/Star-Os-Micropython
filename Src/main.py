@@ -195,6 +195,7 @@ def main():
     if MAIN_DIR in os.listdir() and "Star-Os.py" in os.listdir(MAIN_DIR):
         print(f"{COLOR_YELLOW}Star-Os.py found. Running the script...{COLOR_RESET}")
         try:
+            gc.collect()
             exec(open(f"{MAIN_DIR}/Star-Os.py").read())
         except Exception as e:
             print(f"{COLOR_RED}Error running Star-Os.py: {e}{COLOR_RESET}")
@@ -213,6 +214,9 @@ def main():
             download_files_from_github(repo, file_list, MAIN_DIR)
             gc.collect()
             download_files_from_github("miguelgrinberg/microdot", ["src/microdot.py", "src/microdot_asyncio.py"], "lib", "v1")
+            gc.collect()
+            download_files_from_github("Andre-cmd-rgb/Star-Os-Micropython", ["Src/updater.py"], "lib")
+            gc.collect()
             print(f"{COLOR_GREEN}Star Os installation completed successfully, rebooting...{COLOR_RESET}")
             gc.collect()
             machine.reset()
